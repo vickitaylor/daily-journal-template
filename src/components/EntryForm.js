@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react"
 
-export const EntryForm = ({ entry, moods, onFormSubmit }) => {
+export const EntryForm = ({ entry, moods, tags, onFormSubmit }) => {
     const [editMode, setEditMode] = useState(false)
     const [updatedEntry, setUpdatedEntry] = useState(entry)
+    const [chosenTag, updateTag] = useState([])
 
     useEffect(() => {
         setUpdatedEntry(entry)
@@ -14,17 +15,26 @@ export const EntryForm = ({ entry, moods, onFormSubmit }) => {
         }
     }, [entry])
 
+
+    // useEffect to copy the form data, and then combine it with the chosenTag array.  Copied the new array to the updatedEntry, as the POST function sends one entry when the button is clicked (parameter is named entryData on the form submit function).  So copied the entries to save the tags and send as one, when received by the server the server saves the entry and the tags into the correct tables. 
+    useEffect(
+        () => {
+            let copy = {...updatedEntry}
+            copy.tags = chosenTag
+            setUpdatedEntry(copy)
+        },
+        [chosenTag]
+    )
+
     const handleControlledInputChange = (event) => {
         /*
             When changing a state object or array, always create a new one
             and change state instead of modifying current one
         */
-        const newEntry ={...updatedEntry}
+        const newEntry = { ...updatedEntry }
         newEntry[event.target.name] = event.target.value
         setUpdatedEntry(newEntry)
     }
-
-
 
     const constructNewEntry = () => {
         const copyEntry = { ...updatedEntry }
@@ -70,16 +80,40 @@ export const EntryForm = ({ entry, moods, onFormSubmit }) => {
                                     proptype="int"
                                     value={updatedEntry.moodId}
                                     onChange={handleControlledInputChange}>
-                                        <option value="0">Select a mood</option>
-                                        {moods.map(m => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.label}
-                                            </option>
-                                        ))}
+                                    <option value="0">Select a mood</option>
+                                    {moods.map(m => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                     </div>
+
+                    <div className="field">
+                        <label htmlFor="tagId" className="label">Tags: </label>
+                        <div className="control">
+                            {tags.map((tag) => {
+                                return (
+                                    <div>
+                                        <input type="checkbox" name="tags" required autoFocus
+                                            onChange={(event) => {
+                                                if (event.target.checked) {
+                                                    const newEntry = [...chosenTag]
+                                                    newEntry.push(tag.id)
+                                                    updateTag(newEntry)
+                                                }
+                                            }
+                                            }
+                                            value={tag.id}
+                                        /> {tag.name}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
                     <div className="field">
                         <div className="control">
                             <button type="submit"
